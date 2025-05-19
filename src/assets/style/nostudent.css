@@ -1,0 +1,82 @@
+.no-student-container {
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 2rem;
+}
+
+.no-student-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.no-student-content i {
+  font-size: 4rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.no-student-content h2 {
+  font-size: 1.8rem;
+  color: #343a40;
+  margin-bottom: 1rem;
+}
+
+.no-student-content p {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin-bottom: 2rem;
+}
+
+.add-student-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+}
+
+.add-student-btn:hover {
+  background-color: #0056b3;
+}
+
+.add-student-btn i {
+  font-size: 1rem;
+  margin: 0;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .no-student-container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .no-student-content {
+    padding: 1rem;
+  }
+
+  .no-student-content i {
+    font-size: 3rem;
+  }
+
+  .no-student-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .no-student-content p {
+    font-size: 1rem;
+  }
+}

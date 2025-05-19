@@ -1,0 +1,129 @@
+.scanner-container {
+  padding: 1.5rem;
+  height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanner-content {
+  background: #fff;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.scanner-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.scanner-header h2 {
+  color: #2c3e50;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.scanner-header p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.qr-reader-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8f9fa;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.qr-reader-container video {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.last-scanned {
+  margin-top: 1.5rem;
+  text-align: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.last-scanned p {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Override html5-qrcode styles */
+#qr-reader {
+  border: none !important;
+  padding: 0 !important;
+}
+
+#qr-reader__scan_region {
+  background: transparent !important;
+}
+
+#qr-reader__scan_region video {
+  border-radius: 10px !important;
+}
+
+#qr-reader__dashboard {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#qr-reader__dashboard_section {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#qr-reader__dashboard_section_csr {
+  display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .scanner-container {
+    padding: 1rem;
+  }
+
+  .scanner-content {
+    padding: 1.5rem;
+  }
+
+  .scanner-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .qr-reader-container {
+    max-width: 100%;
+  }
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background: #0056b3;
+} 

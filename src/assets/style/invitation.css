@@ -1,0 +1,226 @@
+.invitation-container {
+  padding: 2rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 1rem;
+}
+
+.invitation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.invitation-header h1 {
+  color: #152259;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.invitation-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: white;
+  min-width: 100%;
+  table-layout: fixed;
+  overflow-x: auto;
+  display: block;
+}
+
+.invitation-table table {
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+.invitation-table th {
+  background-color: #f8f9fa;
+  color: #152259;
+  font-weight: 600;
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.invitation-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  color:#152259;
+}
+
+.invitation-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.accepted {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.accept-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.accept-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.reject-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reject-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.no-invites {
+  text-align: center;
+  padding: 3rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+  margin-top: 2rem;
+}
+
+.no-invites p {
+  color: #6c757d;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e9ecef;
+  border-top: 4px solid #152259;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container {
+  text-align: center;
+  padding: 3rem;
+  background: #fff3f3;
+  border-radius: 10px;
+  margin: 2rem;
+}
+
+.error-container h3 {
+  color: #dc3545;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.error-container p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .invitation-container {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+
+  .invitation-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .invitation-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .invitation-table th,
+  .invitation-table td {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .invitation-container {
+    padding: 0.75rem;
+    margin: 0.25rem;
+  }
+
+  .invitation-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .invitation-table th,
+  .invitation-table td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .status-badge {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}

@@ -1,0 +1,117 @@
+.assign-student-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-container h2 {
+  color: #4D44B5;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: #4D44B5;
+  font-weight: 500;
+}
+
+.form-group select {
+  padding: 0.75rem;
+  border: 1px solid #E0E0E0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: #4D44B5;
+  box-shadow: 0 0 0 2px rgba(77, 68, 181, 0.1);
+}
+
+.error {
+  color: #DC3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-content: flex-end;
+}
+
+.submit-btn, .unassign-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-btn {
+  background-color: #4D44B5;
+  color: white;
+}
+
+.submit-btn:hover {
+  background-color: #3a32a0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.unassign-btn {
+  background-color: #DC3545;
+  color: white;
+}
+
+.unassign-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.submit-btn:disabled, .unassign-btn:disabled {
+  background-color: #A0A0A0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .assign-student-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .form-container h2 {
+    font-size: 1.25rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .submit-btn, .unassign-btn {
+    width: 100%;
+  }
+}
