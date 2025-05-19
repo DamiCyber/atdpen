@@ -4,20 +4,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faHouse, 
-  faSchool, 
-  faGraduationCap, 
   faCalendar, 
   faChalkboard, 
   faBook, 
-  faHandsHoldingChild,
   faGear,
-  faEye,
   faClipboardUser,
   faChartColumn,
-  faPlus,
-  faLinesLeaning,
   faUser,
-  faCog,
   faSignOutAlt,
   faBars,
   faTimes,
@@ -32,8 +25,7 @@ const TeacherScanner = () => {
   const [user, setUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
-  const [isClassroomOpen, setIsClassroomOpen] = useState(false);
-  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -41,6 +33,9 @@ const TeacherScanner = () => {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
+        if (parsedUser.profile_picture) {
+          localStorage.setItem("profilePicture", parsedUser.profile_picture);
+        }
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
@@ -65,20 +60,24 @@ const TeacherScanner = () => {
     };
   }, []);
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    console.log("Searching for:", searchTerm);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("profilePicture");
+    navigate("/login");
+  };
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   const toggleAttendance = () => {
     setIsAttendanceOpen(!isAttendanceOpen);
-  };
-
-  const toggleClassroom = () => {
-    setIsClassroomOpen(!isClassroomOpen);
-  };
-
-  const toggleAssign = () => {
-    setIsAssignOpen(!isAssignOpen);
   };
 
   return (
@@ -111,9 +110,9 @@ const TeacherScanner = () => {
               </Link>
             </li>
             <li>
-              <Link to="/teachers/scan" className="nav-link">
+              <Link to="/teachers/scan" className="nav-link active">
                 <span className="icon">
-                  <FontAwesomeIcon icon={faChalkboard} className="nav-icon" />
+                  <FontAwesomeIcon icon={faQrcode} className="nav-icon" />
                 </span>
                 {isSidebarOpen && <span className="text">Scan QR Code</span>}
               </Link>
@@ -164,13 +163,46 @@ const TeacherScanner = () => {
       <div className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <div className="header">
           <div className="header-left">
-            <h1 className="dashboard-title">Attendance Scanner</h1>
+            <button className="menu-toggle" onClick={toggleSidebar}>
+              <FontAwesomeIcon icon={isSidebarOpen ? faTimes : faBars} />
+            </button>
+            <h1 className="dashboard-title">QR Code Scanner</h1>
           </div>
+          <form className="search-form" onSubmit={handleSearch}>
+            <button type="button">
+              <svg width="17" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="search">
+                <path d="M7.667 12.667A5.333 5.333 0 107.667 2a5.333 5.333 0 000 10.667zM14.334 14l-2.9-2.9" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round"></path>
+              </svg>
+            </button>
+            <input 
+              className="search-input" 
+              placeholder="Search..." 
+              required 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button className="reset" type="reset">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </form>
           <div className="user">
             <div className="profile-picture">
               {user?.profile_picture ? (
                 <img 
                   src={user.profile_picture}
+                  alt="Profile" 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = null;
+                    e.target.parentElement.innerHTML = `<div class="profile-placeholder">${user?.name?.charAt(0)?.toUpperCase() || '?'}</div>`;
+                  }}
+                />
+              ) : localStorage.getItem("profilePicture") ? (
+                <img 
+                  src={localStorage.getItem("profilePicture")}
                   alt="Profile" 
                   onError={(e) => {
                     e.target.onerror = null;
@@ -188,6 +220,9 @@ const TeacherScanner = () => {
               <h4 className="welcome-message">{user?.name || "Loading..."}</h4>
               <h5>Teacher</h5>
             </div>
+            <button className="logout-btn" onClick={handleLogout}>
+              <FontAwesomeIcon icon={faSignOutAlt} />
+            </button>
           </div>
         </div>
 
@@ -198,7 +233,7 @@ const TeacherScanner = () => {
                 <h2>Scan Student ID Card</h2>
                 <p>Position the QR code within the scanner frame</p>
               </div>
-              <div id="qr-reader" className="qr-reader-container"></div>
+              <div id="qr-reader" style={{ width: "500px" }}></div>
               {decodedText && (
                 <div className="last-scanned">
                   <p>Last scanned student ID: {decodedText}</p>
