@@ -26,6 +26,7 @@ const TeacherScanner = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [scanner, setScanner] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -43,22 +44,31 @@ const TeacherScanner = () => {
   }, []);
 
   useEffect(() => {
-    const scanner = new Html5QrcodeScanner("qr-reader", {
-      fps: 10,
-      qrbox: 250,
-    });
-
-    scanner.render((text, result) => {
-      console.log("QR Code detected:", text);
-      setDecodedText(text);
-    });
-
-    return () => {
-      scanner.clear().catch(error => {
-        console.error("Failed to clear scanner", error);
+    // Only create scanner if it doesn't exist
+    if (!scanner) {
+      const newScanner = new Html5QrcodeScanner("qr-reader", {
+        fps: 10,
+        qrbox: 250,
       });
+
+      newScanner.render((text, result) => {
+        console.log("QR Code detected:", text);
+        setDecodedText(text);
+      });
+
+      setScanner(newScanner);
+    }
+
+    // Cleanup function
+    return () => {
+      if (scanner) {
+        scanner.clear().catch(error => {
+          console.error("Failed to clear scanner", error);
+        });
+        setScanner(null);
+      }
     };
-  }, []);
+  }, []); // Empty dependency array means this only runs once on mount
 
   const handleSearch = (e) => {
     e.preventDefault();

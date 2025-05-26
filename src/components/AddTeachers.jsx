@@ -33,10 +33,26 @@ const AddTeachers = () => {
   const [user, setUser] = useState(null);
 
   const validationSchema = yup.object({
-    email: yup.string().email("Invalid email format").required("Email is required").max(28).min(8),
+    firstName: yup.string()
+      .required("First name is required")
+      .min(2, "First name must be at least 2 characters")
+      .max(50, "First name must not exceed 50 characters"),
+    lastName: yup.string()
+      .required("Last name is required")
+      .min(2, "Last name must be at least 2 characters")
+      .max(50, "Last name must not exceed 50 characters"),
+    email: yup.string()
+      .email("Invalid email format")
+      .required("Email is required")
+      .max(28)
+      .min(8),
+    gender: yup.string()
+      .required("Gender is required")
+      .oneOf(["male", "female", "other"], "Please select a valid gender"),
     salary: yup.number()
       .typeError("Salary must be a number")
-      .required("Salary is required"),
+      .required("Salary is required")
+      .min(0, "Salary cannot be negative"),
   });
 
   useEffect(() => {
@@ -69,36 +85,54 @@ const AddTeachers = () => {
 
   const formik = useFormik({
     initialValues: {
+      firstName: "",
+      lastName: "",
       email: "",
+      gender: "",
       salary: "",
     },
     validationSchema: validationSchema,
 
     onSubmit: async (values) => {
       try {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (!userData || !userData.id) {
+          throw new Error('School ID not found');
+        }
+
+        const schoolId = userData.id;
         const response = await axios.post(
-          "https://attendipen-d65abecaffe3.herokuapp.com/invites/send_offer",
-          values,
+          `https://attendipen-backend-staging.onrender.com/api/school/${schoolId}/teacher/invite`,
+          {
+            firstName: values.firstName,
+            lastName: values.lastName,
+            email: values.email,
+            gender: values.gender,
+            salary: values.salary
+          },
           {
             headers: {
               "Content-Type": "application/json",
-              "Accept": "application/json",
-              "Authorization": `Bearer ${localStorage.getItem("token")}`,
-            },
+              "Accept": "application/json"
+            }
           }
         );
 
-        if (response.status === 200) {
+        if (response.data.message === "Teacher invite sent successfully") {
           Swal.fire({
-            title: "Invite sent successfully",
+            title: "Success!",
+            text: "Teacher invite sent successfully",
             icon: "success",
             confirmButtonText: "OK",
-          }).then(() => navigate("/Teachers"));
+          }).then(() => navigate("/teachers"));
+        } else {
+          throw new Error(response.data.message || "Failed to send invite");
         }
       } catch (error) {
+        console.error('Error sending teacher invite:', error);
         Swal.fire({
           title: "Error",
-          text: error.response?.data?.message || "An error occurred",
+          text: error.response?.data?.message || error.message || "Failed to send teacher invite",
           icon: "error",
           confirmButtonText: "OK",
         });
@@ -305,11 +339,37 @@ const AddTeachers = () => {
        
           <form onSubmit={formik.handleSubmit} className='context'>
             <div className="form-group">
+              <label htmlFor="firstName">First Name</label>
+              <input
+                type="text"
+                name="firstName"
+                placeholder="Enter first name"
+                value={formik.values.firstName}
+                onChange={formik.handleChange}
+                className="form-input"
+              />
+              {formik.errors.firstName && <p className="error">{formik.errors.firstName}</p>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="lastName">Last Name</label>
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Enter last name"
+                value={formik.values.lastName}
+                onChange={formik.handleChange}
+                className="form-input"
+              />
+              {formik.errors.lastName && <p className="error">{formik.errors.lastName}</p>}
+            </div>
+
+            <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
                 type="email"
                 name="email"
-                placeholder="Enter your email"
+                placeholder="Enter email address"
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 className="form-input"
@@ -318,11 +378,27 @@ const AddTeachers = () => {
             </div>
 
             <div className="form-group">
+              <label htmlFor="gender">Gender</label>
+              <select
+                name="gender"
+                value={formik.values.gender}
+                onChange={formik.handleChange}
+                className="form-input"
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+              {formik.errors.gender && <p className="error">{formik.errors.gender}</p>}
+            </div>
+
+            <div className="form-group">
               <label htmlFor="salary">Salary</label>
               <input
                 type="number"
                 name="salary"
-                placeholder="Salary Amount"
+                placeholder="Enter salary amount"
                 value={formik.values.salary}
                 onChange={formik.handleChange}
                 className="form-input"

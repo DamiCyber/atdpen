@@ -12,7 +12,7 @@ const Login = () => {
   let navigate = useNavigate();
 
   const validationSchema = yup.object({
-    username: yup
+    email: yup
       .string()
       .email("Please enter a valid email address")
       .required("Email is required")
@@ -26,7 +26,7 @@ const Login = () => {
       .trim()
       .min(8, "Password must be at least 8 characters")
       .max(20, "Password cannot exceed 20 characters"),
-    userType: yup
+    role: yup
       .string()
       .required("Please select a user type")
       .oneOf(["school", "teacher", "parent"], "Invalid user type"),
@@ -35,13 +35,13 @@ const Login = () => {
   const { handleChange, handleSubmit, handleBlur, values, errors, touched } =
     useFormik({
       initialValues: {
-        username: "",
+        email: "",
         password: "",
-        userType: "school", // default value
+        role: "school", // default value
       },
       validationSchema: validationSchema,
       onSubmit: async (values) => {
-        if (!values.username.trim() || !values.password.trim()) {
+        if (!values.email.trim() || !values.password.trim()) {
           setErrorMessage("Please fill in all fields");
           return;
         }
@@ -51,11 +51,11 @@ const Login = () => {
 
         try {
           const response = await axios.post(
-            "https://attendipen-d65abecaffe3.herokuapp.com/auth/login",
+            "https://attendipen-backend-staging.onrender.com/api/auth/signin",
             {
-              email: values.username.trim(),
-              password: values.password.trim(),
-              _type: values.userType,
+              role: values.role,
+              email: values.email.trim(),
+              password: values.password.trim()
             },
             {
               headers: {
@@ -65,27 +65,44 @@ const Login = () => {
             }
           );
 
-          if (response.data && response.data.access_token) {
-            // Store the token
-            localStorage.setItem("token", response.data.access_token);
-            
-            // Store user data
-            const userData = {
-              name: response.data.user?.name || values.username,
-              email: values.username,
-              type: values.userType,
-              profile_picture: response.data.user?.profile_picture || null
-            };
-            localStorage.setItem("user", JSON.stringify(userData));
+          console.log("Login Response:", {
+            status: response.status,
+            statusText: response.statusText,
+            data: response.data,
+            headers: response.headers
+          });
 
-            Swal.fire({
-              title: "Welcome to Attendipen",
-              icon: "success",
-              confirmButtonText: "Thank You",
+          if (response.status === 200) {
+            // Log the exact API response
+            console.log("Login API Response:", {
+              message: response.data.message,
+              data: {
+                token: response.data.data.token,
+                user: response.data.data.user
+              }
             });
 
-            // Redirect based on user type
-            switch (values.userType) {
+            // Save token to localStorage
+            if (response.data.data.token) {
+              localStorage.setItem("token", response.data.data.token);
+              console.log("Token saved to localStorage");
+            }
+
+            // Save user details to localStorage
+            const userData = {
+              id: response.data.data.user.id,
+              firstName: response.data.data.user.firstName,
+              lastName: response.data.data.user.lastName,
+              email: response.data.data.user.email,
+              role: response.data.data.user.role
+            };
+            
+            localStorage.setItem("user", JSON.stringify(userData));
+            console.log("User details saved to localStorage");
+
+            // Navigate based on role
+            const userRole = userData.role.toLowerCase();
+            switch (userRole) {
               case "school":
                 navigate("/Dashboard");
                 break;
@@ -96,12 +113,25 @@ const Login = () => {
                 navigate("/ParentDashboard");
                 break;
               default:
-                setErrorMessage("Invalid user role. Please try again.");
+                setErrorMessage("Invalid user role");
+                return;
             }
+
+            // Show success message
+            Swal.fire({
+              title: "Success",
+              text: response.data.message,
+              icon: "success",
+              confirmButtonText: "OK"
+            });
+          } else {
+            console.log("Unexpected response status:", response.status);
+            setErrorMessage("Unexpected response from server. Please try again.");
           }
         } catch (error) {
           console.error("Login error:", error);
           if (error.response) {
+            console.log("Error response:", error.response);
             switch (error.response.status) {
               case 401:
                 setErrorMessage("Invalid email or password. Please try again.");
@@ -115,11 +145,18 @@ const Login = () => {
               case 429:
                 setErrorMessage("Too many login attempts. Please try again later.");
                 break;
+              case 500:
+                setErrorMessage("Server error. Please try again later.");
+                break;
               default:
-                setErrorMessage("Login failed. Please try again.");
+                setErrorMessage(error.response.data.message || "Login failed. Please try again.");
             }
+          } else if (error.request) {
+            console.log("No response received:", error.request);
+            setErrorMessage("No response from server. Please check your internet connection.");
           } else {
-            setErrorMessage("Cannot connect to server. Please check your internet connection.");
+            console.log("Error setting up request:", error.message);
+            setErrorMessage("An error occurred. Please try again.");
           }
         } finally {
           setIsLoading(false);
@@ -130,26 +167,27 @@ const Login = () => {
   return (
     <div>
       <div className="whole-con">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="first-con">
             <div className="text">
               <h2>Login</h2>
               <h4>Welcome Back</h4>
-              <p>Please enter your Attendance credentials.</p>
+              <p>Please enter your credentials to login.</p>
             </div>
             <div className="login">
               <div className="drop">
-                <label htmlFor="userType">User Type</label>
+                <label htmlFor="role">User Type</label>
                 <div style={{ color: "red" }} className="err">
-                  {touched.userType && errors.userType}
+                  {touched.role && errors.role}
                 </div>
                 <select
-                  name="userType"
-                  id="userType"
-                  value={values.userType}
+                  name="role"
+                  id="role"
+                  value={values.role}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className="dropdown"
+                  disabled={isLoading}
                 >
                   <option value="school">School</option>
                   <option value="teacher">Teacher</option>
@@ -157,18 +195,20 @@ const Login = () => {
                 </select>
               </div>
 
-              <label htmlFor="username">Email ID</label>
+              <label htmlFor="email">Email ID</label>
               <div style={{ color: "red" }} className="err">
-                {touched.username && errors.username}
+                {touched.email && errors.email}
               </div>
               <input
                 type="email"
                 placeholder="Enter Email ID"
                 onChange={handleChange}
                 onBlur={handleBlur}
-                name="username"
-                value={values.username}
-                id="username"
+                name="email"
+                value={values.email}
+                id="email"
+                disabled={isLoading}
+                autoComplete="email"
               />
 
               <label htmlFor="password">Password</label>
@@ -183,6 +223,8 @@ const Login = () => {
                 value={values.password}
                 id="password"
                 placeholder="Password"
+                disabled={isLoading}
+                autoComplete="current-password"
               />
             </div>
 
@@ -193,7 +235,12 @@ const Login = () => {
             )}
 
             <div className="button-container">
-              <button type="submit" className="login-btn" disabled={isLoading}>
+              <button 
+                type="submit" 
+                className="login-btn" 
+                disabled={isLoading}
+                style={{ opacity: isLoading ? 0.7 : 1 }}
+              >
                 {isLoading ? "LOGGING IN..." : "LOGIN"}
               </button>
             </div>

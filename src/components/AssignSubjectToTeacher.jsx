@@ -34,7 +34,7 @@ const AssignSubjectToTeacher = () => {
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [user, setUser] = useState(null);
 
-  const BASE_URL = "https://attendipen-d65abecaffe3.herokuapp.com";
+  const BASE_URL = "https://attendipen-backend-staging.onrender.com";
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -119,11 +119,21 @@ const AssignSubjectToTeacher = () => {
         const selectedTeacher = teachers.find(t => t.id === parseInt(values.id));
         const selectedSubject = subjects.find(s => s.subject_class_id === parseInt(values.subject_class_id));
 
+        if (!selectedTeacher || !selectedSubject) {
+          throw new Error("Selected teacher or subject not found");
+        }
+
+        // Extract school ID from user data
+        const schoolId = user?.school_id;
+        if (!schoolId) {
+          throw new Error("School ID not found");
+        }
+
+        // Make the API call with the new endpoint structure
         const response = await axios.post(
-          `${BASE_URL}/subjects/assign_teacher`,
+          `${BASE_URL}/api/school/${schoolId}/class/${selectedSubject.class_id}/teacher/${selectedTeacher.id}`,
           {
-            subject_class_id: values.subject_class_id,
-            teacher_id: selectedTeacher.id
+            subject_id: selectedSubject.subject_id
           },
           {
             headers: {
@@ -133,7 +143,7 @@ const AssignSubjectToTeacher = () => {
           }
         );
 
-        if (response.status === 200) {
+        if (response.status === 200 || response.status === 201) {
           Swal.fire({
             title: "Success",
             text: `Teacher ${selectedTeacher.name} assigned to ${selectedSubject.subject_name} successfully`,
@@ -143,9 +153,10 @@ const AssignSubjectToTeacher = () => {
         }
 
       } catch (error) {
+        console.error("Assignment error:", error);
         Swal.fire({
           title: "Error",
-          text: error.response?.data?.message || "Failed to assign teacher to subject",
+          text: error.response?.data?.message || error.message || "Failed to assign teacher to subject",
           icon: "error",
         });
       } finally {

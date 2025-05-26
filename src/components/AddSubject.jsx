@@ -24,7 +24,7 @@ import {
 import "../assets/style/dashboard.css";
 import "../assets/style/createsubject.css";
 
-const BASE_URL = "https://attendipen-d65abecaffe3.herokuapp.com";
+const BASE_URL = "https://attendipen-backend-staging.onrender.com/api";
 
 const AddSubject = () => {
   const navigate = useNavigate();
@@ -33,6 +33,8 @@ const AddSubject = () => {
   const [isClassroomOpen, setIsClassroomOpen] = useState(false);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -40,11 +42,39 @@ const AddSubject = () => {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
+        fetchClasses(parsedUser.id);
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
     }
   }, []);
+
+  const fetchClasses = async (schoolId) => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/school/${schoolId}/classes`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          }
+        }
+      );
+      
+      if (response.data.message === "Classes retrieved successfully") {
+        setClasses(response.data.data.classes);
+      } else {
+        throw new Error(response.data.message || "Failed to fetch classes");
+      }
+    } catch (error) {
+      console.error("Error fetching classes:", error);
+      Swal.fire({
+        title: "Error",
+        text: error.response?.data?.message || "Failed to fetch classes",
+        icon: "error",
+      });
+    }
+  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -65,43 +95,47 @@ const AddSubject = () => {
   const validationSchema = yup.object({
     name: yup.string().required("Subject name is required"),
     description: yup.string().required("Description is required"),
+    classId: yup.string().required("Please select a class"),
   });
 
   const formik = useFormik({
     initialValues: {
       name: "",
       description: "",
+      classId: "",
     },
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          console.log("No token found, redirecting to login");
-          navigate("/login");
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (!userData || !userData.id) {
+          Swal.fire({
+            title: "Authentication Required",
+            text: "Please login to continue",
+            icon: "warning",
+            confirmButtonText: "OK",
+          }).then(() => {
+            navigate("/login");
+          });
           return;
         }
 
-        console.log("Submitting subject data:", values);
-        console.log("Using token:", token);
-
+        setLoading(true);
         const response = await axios.post(
-          `${BASE_URL}/subjects`,
-          values,
+          `${BASE_URL}/school/${userData.id}/classes/${values.classId}/subjects`,
+          {
+            name: values.name,
+            description: values.description
+          },
           {
             headers: {
-              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
-            },
+              "Accept": "application/json"
+            }
           }
         );
 
-        console.log("API Response:", response);
-        console.log("Response Status:", response.status);
-        console.log("Response Data:", response.data);
-
-        if (response.status === 201) {
-          console.log("Subject created successfully");
+        if (response.data.message === "Subject created successfully") {
           Swal.fire({
             title: "Success",
             text: "Subject created successfully",
@@ -110,24 +144,17 @@ const AddSubject = () => {
             navigate("/subjects/list");
           });
         } else {
-          console.warn("Unexpected response status:", response.status);
-          throw new Error("Unexpected response from server");
+          throw new Error(response.data.message || "Failed to create subject");
         }
       } catch (error) {
         console.error("Error creating subject:", error);
-        console.error("Error response:", error.response);
-        
-        const errorMessage = error.response?.data?.message || 
-                           error.message || 
-                           "Failed to create subject";
-        
-        console.error("Error message:", errorMessage);
-        
         Swal.fire({
           title: "Error",
-          text: errorMessage,
+          text: error.response?.data?.message || error.message || "Failed to create subject",
           icon: "error",
         });
+      } finally {
+        setLoading(false);
       }
     },
   });
@@ -328,6 +355,28 @@ const AddSubject = () => {
             </div>
             <form onSubmit={formik.handleSubmit} className="profile-form">
               <div className="form-group">
+                <label htmlFor="classId">Select Class</label>
+                <select
+                  id="classId"
+                  name="classId"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.classId}
+                  className={formik.touched.classId && formik.errors.classId ? "error-input" : ""}
+                >
+                  <option value="">Select a class</option>
+                  {classes.map((classItem) => (
+                    <option key={classItem._id} value={classItem._id}>
+                      {classItem.name}
+                    </option>
+                  ))}
+                </select>
+                {formik.touched.classId && formik.errors.classId && (
+                  <div className="error">{formik.errors.classId}</div>
+                )}
+              </div>
+
+              <div className="form-group">
                 <label htmlFor="name">Subject Name</label>
                 <input
                   id="name"
@@ -337,6 +386,7 @@ const AddSubject = () => {
                   onBlur={formik.handleBlur}
                   value={formik.values.name}
                   placeholder="Enter subject name"
+                  className={formik.touched.name && formik.errors.name ? "error-input" : ""}
                 />
                 {formik.touched.name && formik.errors.name && (
                   <div className="error">{formik.errors.name}</div>
@@ -352,6 +402,7 @@ const AddSubject = () => {
                   onBlur={formik.handleBlur}
                   value={formik.values.description}
                   placeholder="Enter subject description"
+                  className={formik.touched.description && formik.errors.description ? "error-input" : ""}
                 />
                 {formik.touched.description && formik.errors.description && (
                   <div className="error">{formik.errors.description}</div>
@@ -363,8 +414,12 @@ const AddSubject = () => {
                   <FontAwesomeIcon icon={faArrowLeft} className="button-icon" />
                   Back to Subjects
                 </Link>
-                <button type="submit" className="submit-btn">
-                  Create Subject
+                <button 
+                  type="submit" 
+                  className="submit-btn"
+                  disabled={loading}
+                >
+                  {loading ? "Creating..." : "Create Subject"}
                 </button>
               </div>
             </form>

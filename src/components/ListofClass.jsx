@@ -26,6 +26,8 @@ const ListofClass = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [user, setUser] = useState(null);
+  const [schoolName, setSchoolName] = useState("");
+  const [totalClasses, setTotalClasses] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
   const [isClassroomOpen, setIsClassroomOpen] = useState(false);
@@ -60,8 +62,8 @@ const ListofClass = () => {
   };
 
   const fetchClasses = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (!userData || !userData.id) {
       Swal.fire({
         title: "Authentication Required",
         text: "Please login to continue",
@@ -75,15 +77,26 @@ const ListofClass = () => {
 
     try {
       const response = await axios.get(
-        "https://attendipen-d65abecaffe3.herokuapp.com/classes",
+        `https://attendipen-backend-staging.onrender.com/api/school/${userData.id}/classes`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
           },
           timeout: 10000,
         }
       );
-      setClasses(response.data);
+      
+      if (response.data.message === "Classes retrieved successfully") {
+        const validClasses = response.data.data.classes.filter(
+          classItem => classItem.name !== "string"
+        );
+        setClasses(validClasses);
+        setSchoolName(response.data.data.schoolName);
+        setTotalClasses(validClasses.length);
+      } else {
+        throw new Error(response.data.message || "Failed to fetch classes");
+      }
     } catch (error) {
       if (error.code === 'ECONNABORTED') {
         setError("Request timed out. Please try again.");
@@ -101,7 +114,7 @@ const ListofClass = () => {
         setError("Failed to fetch classes. Please try again.");
         Swal.fire({
           title: "Error!",
-          text: "Failed to fetch classes",
+          text: error.response?.data?.message || "Failed to fetch classes",
           icon: "error",
           confirmButtonText: "OK",
         });
@@ -116,8 +129,8 @@ const ListofClass = () => {
   }, []);
 
   const handleDeleteClass = async (classId) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (!userData || !userData.id) {
       Swal.fire({
         title: "Authentication Required",
         text: "Please login to continue",
@@ -142,11 +155,12 @@ const ListofClass = () => {
 
       if (result.isConfirmed) {
         await axios.delete(
-          `https://attendipen-d65abecaffe3.herokuapp.com/classes/${classId}`,
+          `https://attendipen-backend-staging.onrender.com/api/school/${userData.id}/classes/${classId}`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
-            },
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            }
           }
         );
 
@@ -165,7 +179,7 @@ const ListofClass = () => {
           navigate("/login");
         });
       } else {
-        Swal.fire("Error!", "Failed to delete class.", "error");
+        Swal.fire("Error!", error.response?.data?.message || "Failed to delete class.", "error");
       }
     }
   };
@@ -523,7 +537,11 @@ const ListofClass = () => {
         <div className="content-body">
           <div className="list-class-container">
             <div className="header">
-              <h2>Class List</h2>
+              <div className="header-info">
+                <h2>Class List</h2>
+                <p className="school-name">{schoolName}</p>
+                <p className="total-classes">Total Classes: {totalClasses}</p>
+              </div>
               <Link to="/classroom/create" className="create-btn">
                 Create New Class
               </Link>
@@ -533,26 +551,30 @@ const ListofClass = () => {
               {classes.length === 0 ? (
                 <div className="no-classes">
                   <p>No classes found. Create your first class!</p>
-                  <Link to="/create-class" className="create-first-btn">
+                  <Link to="/classroom/create" className="create-first-btn">
                     Create Class
                   </Link>
                 </div>
               ) : (
                 classes.map((classItem) => (
-                  <div key={classItem.id} className="class-card">
+                  <div key={classItem._id} className="class-card">
                     <div className="class-info">
                       <h3>{classItem.name}</h3>
+                      <div className="class-details">
+                        <p>Created: {new Date(classItem.createdAt).toLocaleDateString()}</p>
+                        <p>Teacher: {classItem.teacherId ? "Assigned" : "Not Assigned"}</p>
+                      </div>
                     </div>
                     <div className="class-actions">
                       <button
                         className="view-btn"
-                        onClick={() => navigate(`/students/no-student/${classItem.id}`)}
+                        onClick={() => navigate(`/students/no-student/${classItem._id}`)}
                       >
-                        View Students
+                        View details
                       </button>
                       <button
                         className="delete-btn"
-                        onClick={() => handleDeleteClass(classItem.id)}
+                        onClick={() => handleDeleteClass(classItem._id)}
                       >
                         Delete
                       </button>
