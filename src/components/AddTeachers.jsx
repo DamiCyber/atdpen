@@ -118,18 +118,25 @@ const AddTeachers = () => {
           }
         );
 
-        if (response.data.message === "Teacher invite sent successfully") {
+        console.log('Teacher invite response:', response.data);
+
+        if (response.data && response.data.message === "Teacher invitation sent successfully") {
           Swal.fire({
             title: "Success!",
-            text: "Teacher invite sent successfully",
+            text: response.data.message,
             icon: "success",
             confirmButtonText: "OK",
           }).then(() => navigate("/teachers"));
         } else {
-          throw new Error(response.data.message || "Failed to send invite");
+          throw new Error("Unexpected response from server");
         }
       } catch (error) {
-        console.error('Error sending teacher invite:', error);
+        console.error('Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        
         Swal.fire({
           title: "Error",
           text: error.response?.data?.message || error.message || "Failed to send teacher invite",

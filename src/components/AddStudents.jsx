@@ -32,6 +32,7 @@ const AddStudents = () => {
   const [classes, setClasses] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [schoolId, setSchoolId] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -39,6 +40,7 @@ const AddStudents = () => {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
+        setSchoolId(parsedUser.id);
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
@@ -48,69 +50,97 @@ const AddStudents = () => {
   useEffect(() => {
     const fetchClasses = async () => {
       const token = localStorage.getItem("token");
-      if (!token) {
+      if (!token || !schoolId) {
         navigate("/login");
-        return;
+        return;        
       }
 
       try {
         setLoading(true);
         const response = await axios.get(
-          "https://attendipen-d65abecaffe3.herokuapp.com/classes",
+          `https://attendipen-backend-staging.onrender.com/api/school/${schoolId}/classes`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setClasses(response.data);
+        console.log('Classes API Response:', response.data);
+        
+        // Handle the correct response structure
+        let classesData = [];
+        if (response.data && response.data.data && response.data.data.classes) {
+          classesData = response.data.data.classes;
+        }
+
+        // Sort classes by name if available
+        classesData.sort((a, b) => {
+          const nameA = (a.name || a.className || '').toLowerCase();
+          const nameB = (b.name || b.className || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+
+        setClasses(classesData);
       } catch (error) {
         console.error("Error fetching classes:", error);
         if (error.response?.status === 401) {
           localStorage.removeItem("token");
           navigate("/login");
         }
+        // Show error message to user
+        Swal.fire({
+          title: "Error",
+          text: "Failed to fetch classes. Please try again.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClasses();
-  }, [navigate]);
+    if (schoolId) {
+      fetchClasses();
+    }
+  }, [navigate, schoolId]);
 
   const validationSchema = yup.object({
-    email: yup
+    firstName: yup
       .string()
-      .email("Invalid email format")
-      .required("Email is required")
-      .max(28, "Email must be at most 28 characters")
-      .min(8, "Email must be at least 8 characters"),
-    student_name: yup
+      .required("First Name is required")
+      .min(2, "First Name must be at least 2 characters"),
+    lastName: yup
       .string()
-      .required("Full Name is required")
-      .min(3, "Full Name must be at least 3 characters"),
-    student_dob: yup
+      .required("Last Name is required")
+      .min(2, "Last Name must be at least 2 characters"),
+    dateOfBirth: yup
       .string()
-      .required("DOB is required"),
-    class_id: yup
+      .required("Date of Birth is required"),
+    classId: yup
       .string()
       .required("Class is required"),
-    gender: yup.string().oneOf(["Male", "Female", "Other"], "Invalid gender").required("Gender is required"),
+    gender: yup.string().oneOf(["male", "female", "other"], "Invalid gender").required("Gender is required"),
+    parentEmail: yup
+      .string()
+      .email("Invalid email format")
+      .required("Parent Email is required")
+      .max(50, "Email must be at most 50 characters"),
   });
 
   const formik = useFormik({
     initialValues: {
-      email: "",
-      student_name: "",
-      student_dob: "",
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
       gender: "",
-      class_id: "",
+      classId: "",
+      parentEmail: "",
     },
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       const token = localStorage.getItem("token");
 
-      if (!token) {
+      if (!token || !schoolId) {
         Swal.fire({
           title: "Authentication Error",
           text: "Please log in to continue.",
@@ -122,9 +152,22 @@ const AddStudents = () => {
       }
 
       try {
+        setLoading(true);
+        // Format the data according to the API requirements
+        const studentData = {
+          firstName: values.firstName.trim(),
+          lastName: values.lastName.trim(),
+          dateOfBirth: values.dateOfBirth,
+          gender: values.gender.toLowerCase(),
+          parentEmail: values.parentEmail.trim().toLowerCase(),
+          classId: values.classId
+        };
+
+        console.log('Submitting student data:', studentData); // Debug log
+
         const response = await axios.post(
-          "https://attendipen-d65abecaffe3.herokuapp.com/invites/send_invite",
-          values,
+          `https://attendipen-backend-staging.onrender.com/api/school/${schoolId}/student`,
+          studentData,
           {
             headers: {
               "Content-Type": "application/json",
@@ -134,25 +177,41 @@ const AddStudents = () => {
           }
         );
 
-        if (response.status === 200) {
+        console.log('Student creation response:', response.data); // Debug log
+
+        if (response.status === 200 || response.status === 201) {
           Swal.fire({
-            title: "Addmission sent successfully",
+            title: "Success!",
+            text: "Student has been added successfully.",
             icon: "success",
             confirmButtonText: "OK",
           }).then(() => {
+            // Reset form after successful submission
+            formik.resetForm();
             navigate("/students");
           });
         }
       } catch (error) {
-        let errorMessage = "An error occurred. Please try again.";
+        console.error("Error creating student:", error);
+        let errorMessage = "Failed to add student. Please try again.";
 
         if (error.response) {
-          errorMessage = error.response.data?.message || errorMessage;
+          // Handle specific error messages from the API
+          errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
 
           if (error.response.status === 401) {
             errorMessage = "Your session has expired. Please log in again.";
             localStorage.removeItem("token");
             navigate("/login");
+            return;
+          }
+
+          if (error.response.status === 400) {
+            errorMessage = "Please check your input and try again.";
+          }
+
+          if (error.response.status === 409) {
+            errorMessage = "A student with this email already exists.";
           }
         }
 
@@ -162,6 +221,8 @@ const AddStudents = () => {
           icon: "error",
           confirmButtonText: "OK",
         });
+      } finally {
+        setLoading(false);
       }
     },
   });
@@ -345,10 +406,10 @@ const AddStudents = () => {
           <div className="user">
             <div className="profile-picture">
               <img 
-                src={user?.profile_picture || ""} 
+                src={user?.profile_picture || null} 
                 alt="Profile" 
                 onError={(e) => {
-                  e.target.src = "";
+                  e.target.src = null;
                 }}
               />
             </div>
@@ -363,67 +424,93 @@ const AddStudents = () => {
           <form onSubmit={formik.handleSubmit} className="student-form">
             <div className="form-group">
               <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formik.values.email}
+                type="text"
+                name="firstName"
+                placeholder="First Name"
+                value={formik.values.firstName}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 className="form-input"
               />
-              {formik.touched.email && formik.errors.email && (
-                <p className="error">{formik.errors.email}</p>
+              {formik.touched.firstName && formik.errors.firstName && (
+                <p className="error">{formik.errors.firstName}</p>
               )}
             </div>
 
             <div className="form-group">
               <input
                 type="text"
-                name="student_name"
-                placeholder="Full Name"
-                value={formik.values.student_name}
+                name="lastName"
+                placeholder="Last Name"
+                value={formik.values.lastName}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 className="form-input"
               />
-              {formik.touched.student_name && formik.errors.student_name && (
-                <p className="error">{formik.errors.student_name}</p>
+              {formik.touched.lastName && formik.errors.lastName && (
+                <p className="error">{formik.errors.lastName}</p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <input
+                type="email"
+                name="parentEmail"
+                placeholder="Parent Email"
+                value={formik.values.parentEmail}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                className="form-input"
+              />
+              {formik.touched.parentEmail && formik.errors.parentEmail && (
+                <p className="error">{formik.errors.parentEmail}</p>
               )}
             </div>
 
             <div className="form-group">
               <input
                 type="date"
-                name="student_dob"
+                name="dateOfBirth"
                 placeholder="Date of Birth"
-                value={formik.values.student_dob}
+                value={formik.values.dateOfBirth}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 className="form-input"
               />
-              {formik.touched.student_dob && formik.errors.student_dob && (
-                <p className="error">{formik.errors.student_dob}</p>
+              {formik.touched.dateOfBirth && formik.errors.dateOfBirth && (
+                <p className="error">{formik.errors.dateOfBirth}</p>
               )}
             </div>
 
             <div className="form-group">
               <select
-                id="class_id"
-                name="class_id"
+                id="classId"
+                name="classId"
                 onChange={formik.handleChange}
-                value={formik.values.class_id}
+                value={formik.values.classId}
                 disabled={loading}
                 className={`form-input ${loading ? 'loading' : ''}`}
               >
-                <option value="">Select a class</option>
-                {classes.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
-                    {cls.name}
-                  </option>
-                ))}
+                <option value="">{loading ? "Loading classes..." : "Select a class"}</option>
+                {Array.isArray(classes) && classes.length > 0 ? (
+                  classes.map((cls) => (
+                    <option 
+                      key={cls._id} 
+                      value={cls._id}
+                    >
+                      {cls.name || 'Unnamed Class'}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No classes available</option>
+                )}
               </select>
-              {formik.touched.class_id && formik.errors.class_id && (
-                <p className="error">{formik.errors.class_id}</p>
+              {loading && <p className="loading-text">Loading classes...</p>}
+              {!loading && classes.length === 0 && (
+                <p className="error">No classes found. Please create a class first.</p>
+              )}
+              {formik.touched.classId && formik.errors.classId && (
+                <p className="error">{formik.errors.classId}</p>
               )}
             </div>
 
@@ -435,18 +522,25 @@ const AddStudents = () => {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   className="form-input"
+                  disabled={loading}
                 >
                   <option value="" label="Select gender" />
-                  <option value="Male" label="Male" />
-                  <option value="Female" label="Female" />
-                  <option value="Other" label="Other" />
+                  <option value="male" label="Male" />
+                  <option value="female" label="Female" />
+                  <option value="other" label="Other" />
                 </select>
                 {formik.touched.gender && formik.errors.gender && (
                   <p className="error">{formik.errors.gender}</p>
                 )}
               </div>
 
-              <button type="submit" className="submit-btn">Add Student</button>
+              <button 
+                type="submit" 
+                className="submit-btn"
+                disabled={loading}
+              >
+                {loading ? "Adding Student..." : "Add Student"}
+              </button>
             </div>
           </form>
         </div>

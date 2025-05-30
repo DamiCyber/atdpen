@@ -19,7 +19,7 @@ import {
 import "../assets/style/dashboard.css";
 import "../assets/style/invitation.css";
 
-const BASE_URL = "https://attendipen-d65abecaffe3.herokuapp.com";
+const BASE_URL = "https://attendipen-backend-staging.onrender.com";
 
 const InvitationPage = () => {
   const navigate = useNavigate();
@@ -68,8 +68,9 @@ const InvitationPage = () => {
         return;
       }
 
+      setLoading(true);
       const response = await axios.get(
-        `${BASE_URL}/invites/my_invites`,
+        `${BASE_URL}/api/teacher/invitations`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -78,48 +79,36 @@ const InvitationPage = () => {
         }
       );
 
-      if (response.data && Array.isArray(response.data)) {
-        // Fetch school details for each invite
-        const invitesWithSchoolDetails = await Promise.all(
-          response.data.map(async (invite) => {
-            try {
-              const schoolResponse = await axios.get(
-                `${BASE_URL}/schools/${invite.school_id}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                }
-              );
-              return {
-                ...invite,
-                school_name: schoolResponse.data.name,
-                school_email: schoolResponse.data.email
-              };
-            } catch (error) {
-              console.error("Error fetching school details:", error);
-              return {
-                ...invite,
-                school_name: "Unknown School",
-                school_email: "Unknown Email"
-              };
-            }
-          })
-        );
-        setInvites(invitesWithSchoolDetails);
+      console.log('Invitations API Response:', response.data); // Debug log
+
+      if (response.data && response.data.data) {
+        setInvites(response.data.data);
       } else {
-        setError("Invalid data format received from server");
+        setInvites([]);
+        setError("No invitations found");
       }
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching invites:", error);
-      setError(error.response?.data?.message || "Failed to fetch invites");
+      let errorMessage = "Failed to fetch invitations. Please try again.";
+
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = "Your session has expired. Please log in again.";
+          localStorage.removeItem("token");
+          navigate("/login");
+          return;
+        }
+        errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
+      }
+
+      setError(errorMessage);
       Swal.fire({
         title: "Error",
-        text: error.response?.data?.message || "Failed to fetch invites",
+        text: errorMessage,
         icon: "error",
+        confirmButtonText: "OK"
       });
+    } finally {
       setLoading(false);
     }
   };
@@ -133,7 +122,7 @@ const InvitationPage = () => {
       }
 
       const response = await axios.post(
-        `${BASE_URL}/invites/accept_offer/${inviteId}`,
+        `${BASE_URL}/api/teacher/accept/${inviteId}`,
         {},
         {
           headers: {
@@ -143,22 +132,36 @@ const InvitationPage = () => {
         }
       );
 
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         Swal.fire({
           title: "Success",
-          text: "Teacher offer accepted successfully",
+          text: "Teacher invitation accepted successfully",
           icon: "success",
+          confirmButtonText: "OK"
         }).then(() => {
-          fetchInvites();
-          navigate("/invitation");
+          fetchInvites(); // Refresh the invites list
+          navigate("/Teachers/Dashboard"); // Navigate to dashboard after acceptance
         });
       }
     } catch (error) {
-      console.error("Error accepting teacher offer:", error);
+      console.error("Error accepting teacher invitation:", error);
+      let errorMessage = "Failed to accept invitation. Please try again.";
+
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = "Your session has expired. Please log in again.";
+          localStorage.removeItem("token");
+          navigate("/login");
+          return;
+        }
+        errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
+      }
+
       Swal.fire({
         title: "Error",
-        text: error.response?.data?.message || "Failed to accept teacher offer",
+        text: errorMessage,
         icon: "error",
+        confirmButtonText: "OK"
       });
     }
   };
@@ -172,7 +175,7 @@ const InvitationPage = () => {
       }
 
       const response = await axios.post(
-        `${BASE_URL}/invites/${inviteId}/reject`,
+        `${BASE_URL}/api/teacher/reject/${inviteId}`,
         {},
         {
           headers: {
@@ -182,20 +185,35 @@ const InvitationPage = () => {
         }
       );
 
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         Swal.fire({
           title: "Success",
           text: "Invitation rejected successfully",
           icon: "success",
+          confirmButtonText: "OK"
+        }).then(() => {
+          fetchInvites(); // Refresh the invites list
         });
-        fetchInvites();
       }
     } catch (error) {
-      console.error("Error rejecting invite:", error);
+      console.error("Error rejecting invitation:", error);
+      let errorMessage = "Failed to reject invitation. Please try again.";
+
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = "Your session has expired. Please log in again.";
+          localStorage.removeItem("token");
+          navigate("/login");
+          return;
+        }
+        errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
+      }
+
       Swal.fire({
         title: "Error",
-        text: error.response?.data?.message || "Failed to reject invitation",
+        text: errorMessage,
         icon: "error",
+        confirmButtonText: "OK"
       });
     }
   };
@@ -347,33 +365,33 @@ const InvitationPage = () => {
                   <thead>
                     <tr>
                       <th>School</th>
-                      <th>Salary</th>
+                      <th>Position</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {invites.map((invite) => (
-                      <tr key={invite.id}>
-                        <td>{invite.school_name}</td>
-                        <td>{invite.salary}</td>
+                      <tr key={invite._id}>
+                        <td>{invite.schoolName || 'Unknown School'}</td>
+                        <td>{invite.position || 'Teacher'}</td>
                         <td>
-                          <span className={`status-badge ${invite.status}`}>
-                            {invite.status}
+                          <span className={`status-badge ${invite.status?.toLowerCase()}`}>
+                            {invite.status || 'pending'}
                           </span>
                         </td>
                         <td>
-                          {invite.status === 'pending' && (
+                          {invite.status?.toLowerCase() === 'pending' && (
                             <div className="action-buttons">
                               <button
                                 className="accept-btn"
-                                onClick={() => handleAcceptInvite(invite.id)}
+                                onClick={() => handleAcceptInvite(invite._id)}
                               >
                                 Accept
                               </button>
                               <button
                                 className="reject-btn"
-                                onClick={() => handleRejectInvite(invite.id)}
+                                onClick={() => handleRejectInvite(invite._id)}
                               >
                                 Reject
                               </button>

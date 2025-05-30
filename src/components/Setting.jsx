@@ -56,8 +56,19 @@ const Setting = () => {
 
     onSubmit: async (values) => {
       try {
+        const schoolId = user?.school_id;
+        if (!schoolId) {
+          Swal.fire({
+            title: "Error",
+            text: "School ID not found. Please try logging in again.",
+            icon: "error",
+            confirmButtonText: "OK",
+          });
+          return;
+        }
+
         const response = await axios.put(
-          "https://attendipen-d65abecaffe3.herokuapp.com/settings/attendance_time",
+          `https://attendipen-backend-staging.onrender.com/api/school/${schoolId}/attendance/weekly`,
           values,
           {
             headers: {
