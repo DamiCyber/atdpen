@@ -28,20 +28,44 @@ const TeacherScanner = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [scanner, setScanner] = useState(null);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        if (parsedUser.profile_picture) {
-          localStorage.setItem("profilePicture", parsedUser.profile_picture);
-        }
-      } catch (error) {
-        console.error("Error parsing user data:", error);
+ useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  const inviteToken = localStorage.getItem("token");
+  if (storedUser) {
+    try {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+
+      // Save profile picture to localStorage if it exists
+      if (parsedUser.profile_picture) {
+        localStorage.setItem("profilePicture", parsedUser.profile_picture);
       }
+
+            if (inviteToken) {
+        axios.post(`${BASE_URL}/api/teacher/accept/${inviteToken}`)
+          .then(res => console.log("Invitation accepted:", res.data))
+          .catch(err => console.error("Accept invite error:", err.response?.data || err.message));
+      }
+
+
+      // Fetch teacher details if IDs are present
+      if (parsedUser.schoolId && parsedUser.teacherId) {
+        const URL = `${BASE_URL}/api/school/${parsedUser.schoolId}/teacher/${parsedUser.teacherId}`;
+
+        axios.get(URL)
+          .then(response => {
+            console.log("Teacher Details:", response.data);
+          })
+          .catch(error => {
+            console.error("Error fetching teacher details:", error);
+          });
+      }
+    } catch (error) {
+      console.error("Error parsing user data:", error);
     }
-  }, []);
+  }
+}, []);
+
 
   useEffect(() => {
     // Only create scanner if it doesn't exist
@@ -222,12 +246,12 @@ const TeacherScanner = () => {
                 />
               ) : (
                 <div className="profile-placeholder">
-                  {user?.name?.charAt(0)?.toUpperCase() || '?'}
+                  {user?.firstName?.charAt(0)?.toUpperCase() || '?'}
                 </div>
               )}
             </div>
             <div className="user-info">
-              <h4 className="welcome-message">{user?.name || "Loading..."}</h4>
+              <h4 className="welcome-message">{user?.firstName || "Loading..."}</h4>
               <h5>Teacher</h5>
             </div>
             <button className="logout-btn" onClick={handleLogout}>

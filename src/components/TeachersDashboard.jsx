@@ -15,6 +15,7 @@ import {
   faTimes
 } from '@fortawesome/free-solid-svg-icons';
 import "../assets/style/dashboard.css";
+import axios from 'axios';
 
 const TeachersDashboard = () => {
   const navigate = useNavigate();
@@ -23,22 +24,67 @@ const TeachersDashboard = () => {
   const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
+  // useEffect(() => {
+  //   const storedUser = localStorage.getItem("user");
+  //   if (storedUser) {
+  //     try {
+  //       const parsedUser = JSON.parse(storedUser);
+  //       setUser(parsedUser);
         
-        // Save profile picture to localStorage if it exists
-        if (parsedUser.profile_picture) {
-          localStorage.setItem("profilePicture", parsedUser.profile_picture);
-        }
-      } catch (error) {
-        console.error("Error parsing user data:", error);
+  //       if (parsedUser.profile_picture) {
+  //         localStorage.setItem("profilePicture", parsedUser.profile_picture);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error parsing user data:", error);
+  //     }
+  //   }
+  // }, []);
+
+
+const BASE_URL = "https://attendipen-backend-staging.onrender.com";
+
+
+  useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  const inviteToken = localStorage.getItem("token");
+  if (storedUser) {
+    try {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+
+      // Save profile picture to localStorage if it exists
+      if (parsedUser.profile_picture) {
+        localStorage.setItem("profilePicture", parsedUser.profile_picture);
       }
+
+            if (inviteToken) {
+        axios.post(`${BASE_URL}/api/teacher/accept/${inviteToken}`)
+          .then(res => console.log("Invitation accepted:", res.data))
+          .catch(err => console.error("Accept invite error:", err.response?.data || err.message));
+      }
+
+
+      // Fetch teacher details if IDs are present
+      if (parsedUser.schoolId && parsedUser.teacherId) {
+        const URL = `${BASE_URL}/api/school/${parsedUser.schoolId}/teacher/${parsedUser.teacherId}`;
+
+        axios.get(URL)
+          .then(response => {
+            console.log("Teacher Details:", response.data);
+          })
+          .catch(error => {
+            console.error("Error fetching teacher details:", error);
+          });
+      }
+    } catch (error) {
+      console.error("Error parsing user data:", error);
     }
-  }, []);
+  }
+}, []);
+
+
+  
+
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -178,7 +224,7 @@ const TeachersDashboard = () => {
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = null;
-                    e.target.parentElement.innerHTML = `<div class="profile-placeholder">${user?.name?.charAt(0)?.toUpperCase() || '?'}</div>`;
+                    e.target.parentElement.innerHTML = `<div class="profile-placeholder">${user?.firstName?.charAt(0)?.toUpperCase() || '?'}</div>`;
                   }}
                 />
               ) : localStorage.getItem("profilePicture") ? (
@@ -188,17 +234,17 @@ const TeachersDashboard = () => {
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = null;
-                    e.target.parentElement.innerHTML = `<div class="profile-placeholder">${user?.name?.charAt(0)?.toUpperCase() || '?'}</div>`;
+                    e.target.parentElement.innerHTML = `<div class="profile-placeholder">${user?.firstName?.charAt(0)?.toUpperCase() || '?'}</div>`;
                   }}
                 />
               ) : (
                 <div className="profile-placeholder">
-                  {user?.name?.charAt(0)?.toUpperCase() || '?'}
+                  {user?.firstName ?.charAt(0)?.toUpperCase() || '?'}
                 </div>
               )}
             </div>
             <div className="user-info">
-              <h4 className="welcome-message">{user?.name || "Loading..."}</h4>
+              <h4 className="welcome-message">{user?.firstName  || "Loading..."}</h4>
               <h5>Teacher</h5>
             </div>
             <button className="logout-btn" onClick={handleLogout}>

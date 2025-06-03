@@ -122,7 +122,7 @@ const InvitationPage = () => {
       }
 
       const response = await axios.post(
-        `${BASE_URL}/api/teacher/accept/${inviteId}`,
+        `${BASE_URL}/api/teacher/accept/${token}`,
         {},
         {
           headers: {

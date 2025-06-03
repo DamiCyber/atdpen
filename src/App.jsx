@@ -16,7 +16,7 @@ import TeachersDashboard from './components/TeachersDashboard'
 import ViewAllAttendance from './components/ViewAllAttendance'
 import Mark from './components/Mark'
 import AssignStudent from './components/AssignStudent'
-import NoStudent from './components/NoStudent'
+// import NoStudent from './components/NoStudent'
 import SchoolViewAllAttendance from './components/SchoolViewAllAttendance'
 import ListOfParents from './components/ListOfParents'
 import CreateClass from './components/CreateClass'
@@ -29,7 +29,7 @@ import InvitationPage from './components/InvitationPage'
 import ParentView from './components/ParentView'
 import ResultUpload from './components/ResultUpload'
 import PictureUploadForTeacher from './components/PictureUploadForTeacher'
-import UploadStudentpic from './components/UploadStudentpic'
+// import UploadStudentpic from './components/UploadStudentpic'
 import StudentProfile from './components/StudentProfile'
 import Admission from './components/Admission'
 import AssignSubjectToTeacher from './components/AssignSubjectToTeacher'
@@ -75,10 +75,10 @@ const App = () => {
         <Route path="/students" element={<Student />} />
         <Route path="/students/add" element={<AddStudents />} />
         <Route path="/students/assign" element={<AssignStudent />} />
-        <Route path="/students/no-student/:classId" element={<NoStudent />} />
+        {/* <Route path="/students/no-student/:classId" element={<NoStudent />} /> */}
         <Route path="/students/profile/:studentId" element={<StudentProfile />} />
         <Route path="/students/admission/:inviteId" element={<Admission />} />
-        <Route path="/students/upload-picture/:studentId" element={<UploadStudentpic />} />
+        {/* <Route path="/students/upload-picture/:studentId" element={<UploadStudentpic />} /> */}
 
         {/* Class Management Routes */}
         <Route path="/classroom/create" element={<CreateClass />} />
