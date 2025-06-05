@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import Loader from './components/Loader'
@@ -45,6 +45,12 @@ import ParentChild from './components/ParentChild'
 import ParentStudentDetails from './components/ParentStudentDetails'
 import TeacherDetails from './components/TeacherDetails'
 import TeacherScanner from './components/TeacherScanner';
+import TeacherHome from './components/Teacher/TeacherHome';
+import TeacherInvitation from './components/Teacher/TeacherInvitation';
+import MarkAttendance from './components/Teacher/MarkAttendance';
+import TeacherProfile from './components/Teacher/TeacherProfile';
+import ScanQRCode from './components/Teacher/ScanQRCode';
+import EditProfile from './components/Teacher/EditProfile';
 
 const App = () => {
   return (
@@ -57,7 +63,7 @@ const App = () => {
 
         {/* Dashboard Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/Teachers/Dashboard" element={<TeachersDashboard />} />
+        {/* <Route path="/Teachers/Dashboard" element={<TeachersDashboard />} /> */}
         <Route path="/ParentDashboard" element={<ParentDash />} />
 
         {/* Teacher Management Routes */}
@@ -71,6 +77,19 @@ const App = () => {
         <Route path="/teachers/scan" element={<TeacherScanner />} />
         <Route path="/teachers/students/:studentId" element={<TeacherstudentDetails />} />
              
+{/* Teacher's Dashboard*/}
+
+
+    <Route path="/TeachersDashboard" element={<TeachersDashboard />}>
+    <Route index element={<Navigate to="home" replace />} />
+          <Route path="home" element={<TeacherHome />} />
+          <Route path="accept-invite/:accesstoken" element={<TeacherInvitation />} />
+          <Route path="scan" element={<ScanQRCode />} />
+          <Route path="attendance/mark" element={<MarkAttendance />} />
+          <Route path="profile/details" element={<TeacherProfile />} />
+          <Route path="profile/edit" element={<EditProfile />} />
+        </Route>
+
         {/* Student Management Routes */}
         <Route path="/students" element={<Student />} />
         <Route path="/students/add" element={<AddStudents />} />
@@ -107,7 +126,7 @@ const App = () => {
 
         {/* School Management Routes */}
         <Route path="/school/edit" element={<SchoolEdit />} />
-        <Route path="/school/invitation" element={<InvitationPage />} />
+        <Route path="/accept-invitation/:token" element={<InvitationPage />} />
         <Route path="/school/details" element={<SchoolDetails />} />
         <Route path="/school/profile" element={<SchoolProfile />} />
 

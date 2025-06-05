@@ -3,16 +3,11 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faHouse, faCalendar, faChalkboard, faGear, faClipboardUser,
-  faUser, faSignOutAlt, faBars, faTimes
-} from '@fortawesome/free-solid-svg-icons';
-import "../assets/style/dashboard.css";
-import "../assets/style/invitation.css";
+import {  faBars, faTimes} from '@fortawesome/free-solid-svg-icons';
 
-const BASE_URL = "https://attendipen-backend-staging.onrender.com";
 
-const InvitationPage = () => {
+const TeacherInvitation = () => {
+
   const navigate = useNavigate();
   const { token } = useParams();
   const [invites, setInvites] = useState([]);
@@ -21,6 +16,8 @@ const InvitationPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
   const [user, setUser] = useState(null);
+
+const BASE_URL = "https://attendipen-backend-staging.onrender.com";
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -125,59 +122,34 @@ const InvitationPage = () => {
   if (loading) return <div className="loading-container"><p>Loading...</p></div>;
   if (error) return <div className="error-container"><p>{error}</p><button onClick={fetchInvites}>Retry</button></div>;
 
+
   return (
-    <div className="dashboard-container">
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
-        <div className="sidebar-header">
-          <img src="https://res.cloudinary.com/dgxvuw8wd/image/upload/v1745508053/1f4177ed-47e3-4a5a-b5f3-0e8adf1595c3-removebg-preview_celvbn.png" alt="Logo" />
-          <button onClick={toggleSidebar}>{isSidebarOpen ? '←' : '→'}</button>
-        </div>
-        <nav>
-          <ul className="nav-links">
-            <li><Link to="/Teachers/Dashboard"><FontAwesomeIcon icon={faHouse} /> Dashboard</Link></li>
-            <li><Link to={`/accept-invitation/${token}`}><FontAwesomeIcon icon={faChalkboard} /> Accept Invite</Link></li>
-            <li><Link to="/teachers/scan"><FontAwesomeIcon icon={faChalkboard} /> Scan QR</Link></li>
-            <li>
-              <div onClick={toggleAttendance}><FontAwesomeIcon icon={faCalendar} /> Attendance ▼</div>
-              {isAttendanceOpen && (
-                <ul>
-                  <li><Link to="/attendance/mark"><FontAwesomeIcon icon={faClipboardUser} /> Mark Attendance</Link></li>
-                </ul>
+    <div>      <main className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+            <header className="header">
+              <button onClick={toggleSidebar}><FontAwesomeIcon icon={isSidebarOpen ? faTimes : faBars} /></button>
+              <h1>My Invitations</h1>
+            </header>
+    
+            <section className="invites-section">
+              {invites.length === 0 ? (
+                <p>No invitations available.</p>
+              ) : (
+                invites.map(invite => (
+                  <div key={invite.id} className="invite-card">
+                    <h3>Invitation to {invite.school?.name || 'a school'}</h3>
+                    <p>Email: {invite.email}</p>
+                    <p>Message: {invite.message}</p>
+                    <div className="actions">
+                      <button onClick={() => handleAcceptInvite(invite.id)} className="accept-btn">Accept</button>
+                      <button onClick={() => handleRejectInvite(invite.id)} className="reject-btn">Reject</button>
+                    </div>
+                  </div>
+                ))
               )}
-            </li>
-            <li><Link to="/teachers/profile/details"><FontAwesomeIcon icon={faUser} /> Profile</Link></li>
-            <li><Link to="/teachers/profile/edit"><FontAwesomeIcon icon={faGear} /> Settings</Link></li>
-            <li><button onClick={handleLogout}><FontAwesomeIcon icon={faSignOutAlt} /> Logout</button></li>
-          </ul>
-        </nav>
-      </aside>
+            </section>
+          </main>
+          </div>
+  )
+}
 
-      <main className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-        <header className="header">
-          <button onClick={toggleSidebar}><FontAwesomeIcon icon={isSidebarOpen ? faTimes : faBars} /></button>
-          <h1>My Invitations</h1>
-        </header>
-
-        <section className="invites-section">
-          {invites.length === 0 ? (
-            <p>No invitations available.</p>
-          ) : (
-            invites.map(invite => (
-              <div key={invite.id} className="invite-card">
-                <h3>Invitation to {invite.school?.name || 'a school'}</h3>
-                <p>Email: {invite.email}</p>
-                <p>Message: {invite.message}</p>
-                <div className="actions">
-                  <button onClick={() => handleAcceptInvite(invite.id)} className="accept-btn">Accept</button>
-                  <button onClick={() => handleRejectInvite(invite.id)} className="reject-btn">Reject</button>
-                </div>
-              </div>
-            ))
-          )}
-        </section>
-      </main>
-    </div>
-  );
-};
-
-export default InvitationPage;
+export default TeacherInvitation

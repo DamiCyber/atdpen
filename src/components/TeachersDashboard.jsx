@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate, useParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faHouse, 
@@ -41,6 +41,8 @@ const TeachersDashboard = () => {
   // }, []);
 
 
+     const { accesstoken } = useParams();
+
 const BASE_URL = "https://attendipen-backend-staging.onrender.com";
 
 
@@ -58,7 +60,7 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
       }
 
             if (inviteToken) {
-        axios.post(`${BASE_URL}/api/teacher/accept/${inviteToken}`)
+        axios.post(`${BASE_URL}/api/teacher/accept/${accesstoken}`)
           .then(res => console.log("Invitation accepted:", res.data))
           .catch(err => console.error("Accept invite error:", err.response?.data || err.message));
       }
@@ -121,7 +123,7 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
         <nav>
           <ul className="nav-links">
             <li>
-              <Link to="/Teachers/Dashboard" className="nav-link">
+              <Link to="/TeachersDashboard/home" className="nav-link">
                 <span className="icon">
                   <FontAwesomeIcon icon={faHouse} className="nav-icon" />
                 </span>
@@ -129,7 +131,7 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
               </Link>
             </li>
             <li>
-              <Link to="/school/invitation" className="nav-link">
+              <Link to={`/TeachersDashboard/accept-invite/${accesstoken}`} className="nav-link">
                 <span className="icon">
                   <FontAwesomeIcon icon={faChalkboard} className="nav-icon" />
                 </span>
@@ -254,7 +256,7 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
         </div>
 
         <div className="content-body">
-          {/* Add your teacher dashboard content here */}
+         <Outlet />
         </div>
       </div>
     </div>

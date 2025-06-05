@@ -107,7 +107,7 @@ const Login = () => {
                 navigate("/Dashboard");
                 break;
               case "teacher":
-                navigate("/Teachers/Dashboard");
+                navigate("/TeachersDashboard");
                 break;
               case "parent":
                 navigate("/ParentDashboard");
