@@ -139,7 +139,7 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
               </Link>
             </li>
             <li>
-              <Link to="/teachers/scan" className="nav-link">
+              <Link to="/TeachersDashboard/scan" className="nav-link">
                 <span className="icon">
                   <FontAwesomeIcon icon={faChalkboard} className="nav-icon" />
                 </span>
@@ -161,7 +161,7 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
               {isSidebarOpen && isAttendanceOpen && (
                 <ul className="dropdown-menu">
                   <li>
-                    <Link to="/attendance/mark" className="dropdown-link">
+                    <Link to="/TeachersDashboard/attendance/mark" className="dropdown-link">
                       <span className="icon"><FontAwesomeIcon icon={faClipboardUser} className="nav-icon" /></span>
                       <span className="text">Mark Attendance</span>
                     </Link>
@@ -170,7 +170,7 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
               )}
             </li>
             <li>
-              <Link to="/teachers/profile/details" className="nav-link">
+              <Link to="/TeachersDashboard/profile/details" className="nav-link">
                 <span className="icon">
                   <FontAwesomeIcon icon={faUser} className="nav-icon" />
                 </span>
@@ -178,7 +178,7 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
               </Link>
             </li>
             <li>
-              <Link to="/teachers/profile/edit" className="nav-link">
+              <Link to="/TeachersDashboard/profile/edit" className="nav-link">
                 <span className="icon">
                   <FontAwesomeIcon icon={faGear} className="nav-icon" />
                 </span>
@@ -195,7 +195,6 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
             <button className="menu-toggle" onClick={toggleSidebar}>
               <FontAwesomeIcon icon={isSidebarOpen ? faTimes : faBars} />
             </button>
-            <h1 className="dashboard-title">Teacher Dashboard</h1>
           </div>
           <form className="search-form" onSubmit={handleSearch}>
             <button type="button">

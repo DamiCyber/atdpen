@@ -9,12 +9,11 @@ import {  faBars, faTimes} from '@fortawesome/free-solid-svg-icons';
 const TeacherInvitation = () => {
 
   const navigate = useNavigate();
-  const { token } = useParams();
+  const { accesstoken } = useParams();
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
   const [user, setUser] = useState(null);
 
 const BASE_URL = "https://attendipen-backend-staging.onrender.com";
@@ -32,21 +31,17 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
   }, []);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  const toggleAttendance = () => setIsAttendanceOpen(!isAttendanceOpen);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
-  };
+
 
   const fetchInvites = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return navigate("/login");
+      const authToken = localStorage.getItem("token");
+      if (!authToken) return navigate("/login");
 
-      const response = await axios.get(`${BASE_URL}/api/accept/${token}`, {
+      const response = await axios.get(`${BASE_URL}/api/accept/${accesstoken}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
           "Content-Type": "application/json"
         }
       });
@@ -78,10 +73,10 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const authToken = localStorage.getItem("token");
       const response = await axios.post(
-        `${BASE_URL}/api/teacher/accept/${token}`, {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${BASE_URL}/api/teacher/accept/${accesstoken}`, {},
+        { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
       Swal.fire("Success", "Invitation accepted successfully!", "success").then(() => {
@@ -106,10 +101,10 @@ const BASE_URL = "https://attendipen-backend-staging.onrender.com";
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const authToken = localStorage.getItem("token");
       const response = await axios.post(
-        `${BASE_URL}/api/teacher/reject/${token}`, {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${BASE_URL}/api/teacher/reject/${accesstoken}`, {},
+        { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
       Swal.fire("Success", "Invitation rejected successfully!", "success").then(() => fetchInvites());

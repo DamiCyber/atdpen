@@ -194,7 +194,7 @@ const TeacherScanner = () => {
         </nav>
       </div>
 
-      <div className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      <main className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <div className="header">
           <div className="header-left">
             <button className="menu-toggle" onClick={toggleSidebar}>
@@ -276,7 +276,7 @@ const TeacherScanner = () => {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
